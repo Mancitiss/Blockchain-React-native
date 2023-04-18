@@ -29,3 +29,6 @@ web-build/
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# env files
+.env
