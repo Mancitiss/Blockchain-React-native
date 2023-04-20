@@ -1,27 +1,76 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import { Peer } from "peerjs";
+import Peer from "react-native-peerjs";
+import React, { useEffect, useState } from 'react';
 
 export default function App() {
-  const connectPeer = process.env.TRUSTED_ID || "thao-iuu";
-  console.log("connectPeer ", connectPeer);
-  const peer = new Peer("mancitiss");
-  peer.on("connection", (conn) => {
-    conn.on("data", (data) => {
-      // Will print 'hi!'
-      console.log(data);
+  useEffect(() => {
+    // create local peer
+    const localPeer = new Peer({
+      config: {
+        iceServers: [
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          }
+        ]
+      }
     });
-    conn.on("open", () => {
-      conn.send("hello!");
-    });
-  });
 
-  if (peer.id != connectPeer.id){
-    const conn = peer.connect(connectPeer);
-    conn.on("open", () => {
-      conn.send("hi!");
+    localPeer.on('error', (err) => {
+      console.error(err);
     });
-  }
+
+    localPeer.on('open', localPeerId => {
+      console.log('Local peer open with ID', localPeerId);
+
+      const remotePeer = new Peer({
+        config: {
+          iceServers: [
+            {
+              urls: 'turn:openrelay.metered.ca:80',
+              username: 'openrelayproject',
+              credential: 'openrelayproject'
+            }
+          ]
+        }
+      });
+      remotePeer.on('error', err => console.log(err));
+      remotePeer.on('open', remotePeerId => {
+        console.log('Remote peer open with ID', remotePeerId);
+
+        try{
+          const conn = remotePeer.connect(localPeerId);
+          conn.on('error', err => console.log(err));
+          conn.on('open', () => {
+            console.log('Remote peer has opened connection.');
+            console.log('conn', conn);
+            conn.on('data', data => console.log('Received from local peer', data));
+            console.log('Remote peer sending data.');
+            conn.send('Hello, this is the REMOTE peer!');
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+
+    localPeer.on('connection', (conn) => {
+      console.log(`Connection established`);
+      conn.on('error', (err) => {
+        console.error(err);
+      });
+      conn.on('open', () => {
+        console.log('Local peer has opened connection.');
+        console.log('conn', conn);
+        conn.on('data', data => console.log('Received from remote peer', data));
+        console.log('Local peer sending data.');
+        conn.send('Hello, this is the LOCAL peer!');
+      });
+    });
+
+  }, []);
 
   return (
     <View style={styles.container}>
