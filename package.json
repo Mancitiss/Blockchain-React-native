@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "expo": "~48.0.11",
+    "expo-dev-client": "~2.2.1",
     "expo-status-bar": "~1.4.4",
-    "peerjs": "^1.4.7",
     "react": "18.2.0",
-    "react-native": "0.71.6"
+    "react-native": "0.71.6",
+    "react-native-peerjs": "^1.0.4",
+    "react-native-simple-peer": "^0.1.5",
+    "react-native-webrtc": "^111.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
